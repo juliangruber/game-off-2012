@@ -4,6 +4,8 @@
   "version" : "0.0.0",
   "dependencies" : {
     "shoe" : "0.0.7",
-    "ecstatic" : "*"
+    "ecstatic" : "*",
+    "monotonic-timestamp" : "~0.0.7",
+    "deck" : "0.0.4"
   }
 }
