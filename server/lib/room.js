@@ -1,4 +1,9 @@
-module.exports = Room
+/**
+ * Module dependencies
+ */
+
+var emitStream = require('emit-stream')
+var JSONStream = require('JSONStream')
 
 /**
  * Room
@@ -19,6 +24,7 @@ function Room (id) {
  */
 
 Room.prototype.notify = function (msg) {
+  return
   this.members.forEach(function (member) {
     member.write(msg)
   })
@@ -31,6 +37,9 @@ Room.prototype.notify = function (msg) {
  */
 
 Room.prototype.join = function (member) {
+  this.members.forEach(function (_member) {
+    _member.pipe(member).pipe(_member)
+  })
   this.members.push(member)
 }
 
@@ -54,3 +63,5 @@ Room.prototype.leave = function (member) {
 Room.prototype.empty = function () {
   return !this.members.length
 }
+
+module.exports = Room

@@ -33,7 +33,10 @@ var Game = function (canvas) {
   fullscreen(canvas)
 
   // x and y in %
-  this.players = [new Player('julian')]
+  this.players = [
+    new Player('julian', 0, 50),
+    new Player('foe', 100, 50, true)
+  ]
   this.points = []
 
   for (var i = 1; i < 10; i++) {
@@ -106,16 +109,17 @@ Point.prototype.update = function () { }
  * Player
  */
 
-var Player = function (name) {
+var Player = function (name, x, y, remote) {
   Emitter.call(this)
 
   this.name = name
-  this.x = 0
-  this.y = 50
+  this.x = x
+  this.y = y
   this.point = new Point(this.x, this.y)
   this.id = Math.random().toString(16).slice(2)
   this.last = ''
 
+  if (remote) return
   key(['up', 'w'], this, 'up')
   key(['down', 's'], this, 'down')
   key('space', this, 'push')
@@ -181,9 +185,13 @@ Push.prototype.update = function () {
   players.forEach(function (player) {
     if (!player.push) return
 
+    var dir = player.x < 50
+      ? 1
+      : -1
+
     points.forEach(function (point) {
       if (Math.abs(point.y - player.y) > 10) return
-      point.x += 1 / point.distance(player) * 10
+      point.x += dir * 0.4 /*/ point.distance(player) * 10*/
     })
   })
 
@@ -200,6 +208,14 @@ var Net = function (players) {
   emitStream(players[0])
     .pipe(JSONStream.stringify())
     .pipe(stream)
+
+  var foe = emitStream(stream.pipe(JSONStream.parse([true])))
+  
+  foe.on('update', function (state) {
+    players[1].x = 100 - state.x
+    players[1].y = state.y
+    players[1].push = state.push
+  })
 }
 
 /**
