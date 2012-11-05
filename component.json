@@ -1,0 +1,14 @@
+{
+  "name": "game",
+  "scripts": [
+    "index.js"
+  ],
+  "dependencies": {
+    "component/raf": "*",
+    "component/vector": "*",
+    "component/inherit": "*",
+    "component/mousetrap": "*",
+    "component/autoscale-canvas": "*",
+    "juliangruber/shoe": "*"
+  }
+}

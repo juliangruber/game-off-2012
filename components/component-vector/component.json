@@ -1,0 +1,17 @@
+{
+  "name": "vector",
+  "version": "0.0.1",
+  "description": "Vector component",
+  "keywords": [
+    "vector",
+    "canvas"
+  ],
+  "scripts": [
+    "index.js"
+  ],
+  "dependencies": {},
+  "development": {
+    "component/assert": "*"
+  },
+  "repo": "https://raw.github.com/component/vector"
+}
