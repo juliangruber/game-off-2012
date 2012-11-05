@@ -8,41 +8,41 @@ module.exports = Room
  */
 
 function Room (id) {
-  this.clients = []
+  this.members = []
   this.id = id
 }
 
 /**
- * Notify all clients in a room
+ * Notify all members in a room
  *
  * @param {String} msg
  */
 
 Room.prototype.notify = function (msg) {
-  this.clients.forEach(function (client) {
-    client.write(msg)
+  this.members.forEach(function (member) {
+    member.write(msg)
   })
 }
 
 /**
- * Add a client to the room
+ * Add a member to the room
  *
- * @param {Stream} client
+ * @param {Stream} member
  */
 
-Room.prototype.join = function (client) {
-  this.clients.push(client)
+Room.prototype.join = function (member) {
+  this.members.push(member)
 }
 
 /**
- * Remove a client from the room
+ * Remove a member from the room
  *
- * @param {Stream} client
+ * @param {Stream} member
  */
 
-Room.prototype.leave = function (client) {
-  var idx = this.clients.indexOf(client)
-  this.clients.splice(idx, 1)
+Room.prototype.leave = function (member) {
+  var idx = this.members.indexOf(member)
+  this.members.splice(idx, 1)
 }
 
 /**
@@ -52,5 +52,5 @@ Room.prototype.leave = function (client) {
  */
 
 Room.prototype.empty = function () {
-  return !! this.clients.length
+  return !this.members.length
 }

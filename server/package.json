@@ -6,6 +6,8 @@
     "shoe" : "0.0.7",
     "ecstatic" : "*",
     "monotonic-timestamp" : "~0.0.7",
-    "deck" : "0.0.4"
+    "deck" : "0.0.4",
+    "emit-stream" : "*",
+    "JSONStream" : "*"
   }
 }

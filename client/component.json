@@ -10,6 +10,9 @@
     "component/mousetrap": "*",
     "component/autoscale-canvas": "*",
     "juliangruber/shoe": "*",
-    "component/emitter": "*"
+    "component/emitter": "*",
+    "juliangruber/emit-stream": "*",
+    "juliangruber/JSONStream": "*",
+    "juliangruber/through": "*"
   }
 }

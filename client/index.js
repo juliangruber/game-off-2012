@@ -9,6 +9,9 @@ var mousetrap = require('mousetrap')
 var autoscale = require('autoscale-canvas')
 var shoe = require('shoe')
 var Emitter = require('emitter')
+var emitStream = require('emit-stream')
+var JSONStream = require('JSONStream')
+var through = require('through')
 
 /**
  * Bootstrap
@@ -111,6 +114,7 @@ var Player = function (name) {
   this.y = 50
   this.point = new Point(this.x, this.y)
   this.id = Math.random().toString(16).slice(2)
+  this.last = ''
 
   key(['up', 'w'], this, 'up')
   key(['down', 's'], this, 'down')
@@ -129,11 +133,23 @@ Player.prototype.update = function () {
   this.point.x = this.x
   this.point.y = this.y
 
+  var state = this.serialize()
+  if (this.last == state) return
+
+  this.last = state
   this.emit('update', {
     x : this.x,
     y : this.y,
     push : this.push
   })
+}
+
+Player.prototype.serialize = function () {
+  return [
+    this.x,
+    this.y,
+    this.push  
+  ].join('|')
 }
 
 Player.prototype.draw = function (ctx) {
@@ -181,16 +197,9 @@ var Net = function (players) {
   var stream = shoe('/stream')
   stream.on('data', console.log.bind(console))
 
-  players.forEach(function (player) {
-    var last
-    player.on('update', function (state) {
-      state.id = player.id
-      var serialized = JSON.stringify(state)
-      if (serialized == last) return
-      last = serialized
-      stream.write(serialized)
-    })
-  })
+  emitStream(players[0])
+    .pipe(JSONStream.stringify())
+    .pipe(stream)
 }
 
 /**
