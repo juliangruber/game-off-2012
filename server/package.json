@@ -1,0 +1,9 @@
+{
+  "name" : "server",
+  "private" : true,
+  "version" : "0.0.0",
+  "dependencies" : {
+    "shoe" : "0.0.7",
+    "ecstatic" : "*"
+  }
+}
