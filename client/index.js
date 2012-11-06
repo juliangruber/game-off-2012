@@ -5,13 +5,16 @@
 var raf = require('raf')
 var Vector = require('vector')
 var inherit = require('inherit')
-var mousetrap = require('mousetrap')
 var autoscale = require('autoscale-canvas')
 var shoe = require('shoe')
 var Emitter = require('emitter')
 var emitStream = require('emit-stream')
 var JSONStream = require('JSONStream')
 var through = require('through')
+
+var Player = require('./lib/player')
+var Point = require('./lib/point')
+var util = require('./lib/util')
 
 /**
  * Bootstrap
@@ -30,17 +33,18 @@ var Game = function (canvas) {
   this.ctx = canvas.getContext('2d')
 
   autoscale(canvas)
-  fullscreen(canvas)
+  util.fullscreen(canvas)
 
-  // x and y in %
   this.players = [
-    new Player('julian', 0, 50),
-    new Player('foe', 100, 50, true)
+    Player().move(0, 50).name('julian').captureKeys(),
+    /*Player().move(100, 50)*/
+    Bot()
   ]
   this.points = []
 
-  for (var i = 1; i < 10; i++) {
-    this.points.push(new Point(50, i * 10))
+  var numPoints = 300
+  for (var i = 1; i < numPoints; i++) {
+    this.points.push(new Point(50, i * 100/numPoints))
   }
 
   this.push = new Push(this.players, this.points)
@@ -78,96 +82,6 @@ Game.prototype.update = function () {
 }
 
 /**
- * Point
- */
-
-var Point = function (x, y) {
-  Vector.call(this, x, y)
-}
-
-inherit(Point, Vector)
-
-Point.prototype.draw = function (ctx, opts) {
-  if (!opts) opts = {}
-  var ratio = window.devicePixelRatio || 1
-  var width = ctx.canvas.width / ratio
-  var height = ctx.canvas.height / ratio
-
-  var x = width * this.x / 100
-  var y = height * this.y / 100
-
-  ctx.beginPath()   
-  ctx.arc(x, y, 5, 0, 2 * Math.PI)
-  
-  if (opts.fill) return ctx.fill()
-  ctx.stroke()
-}
-
-Point.prototype.update = function () { }
-
-/**
- * Player
- */
-
-var Player = function (name, x, y, remote) {
-  Emitter.call(this)
-
-  this.name = name
-  this.x = x
-  this.y = y
-  this.point = new Point(this.x, this.y)
-  this.id = Math.random().toString(16).slice(2)
-  this.last = ''
-
-  if (remote) return
-  key(['up', 'w'], this, 'up')
-  key(['down', 's'], this, 'down')
-  key('space', this, 'push')
-}
-
-inherit(Player, Emitter)
-
-Player.prototype.update = function () {
-  if (this.up) this.y -= 1
-  if (this.down) this.y += 1
-  if (this.push) {}
-
-  this.bounce()
-
-  this.point.x = this.x
-  this.point.y = this.y
-
-  var state = this.serialize()
-  if (this.last == state) return
-
-  this.last = state
-  this.emit('update', {
-    x : this.x,
-    y : this.y,
-    push : this.push
-  })
-}
-
-Player.prototype.serialize = function () {
-  return [
-    this.x,
-    this.y,
-    this.push  
-  ].join('|')
-}
-
-Player.prototype.draw = function (ctx) {
-  this.point.draw(ctx, { fill : true })
-}
-
-Player.prototype.bounce = function () {
-  ['y', 'x'].forEach(function (cord) {
-    if (this[cord] < 0) return this[cord] = 0
-    if (this[cord] > 100) return this[cord] = 100
-  }.bind(this))
-}
-
-/**
  * Push
  */
 
@@ -182,16 +96,20 @@ Push.prototype.update = function () {
   var players = this.players
   var points = this.points
 
-  players.forEach(function (player) {
+  players.forEach(function (player, pid) {
     if (!player.push) return
 
-    var dir = player.x < 50
-      ? 1
-      : -1
-
     points.forEach(function (point) {
-      if (Math.abs(point.y - player.y) > 10) return
-      point.x += dir * 0.4 /*/ point.distance(player) * 10*/
+      var dir = player.x - point.x > 0
+        ? -1
+        : 1
+
+      dir = pid == 0
+        ? 1
+        : -1
+
+      // if (Math.abs(point.y - player.y) > 10) return
+      point.x += dir * 1 / point.distance(player) * 3
     })
   })
 
@@ -200,6 +118,10 @@ Push.prototype.update = function () {
     if (point.x > 50) point.x -= 0.025
   })
 }
+
+/**
+ * Networking
+ */
 
 var Net = function (players) {
   var stream = shoe('/stream')
@@ -219,23 +141,39 @@ var Net = function (players) {
 }
 
 /**
- * Utility functions
+ * Bot
  */
 
-function key (keys, obj, prop) {
-  mousetrap.bind(keys, function () { obj[prop] = true }, 'keydown')
-  mousetrap.bind(keys, function () { obj[prop] = false }, 'keyup')
+var Bot = function () {
+  if (!(this instanceof Bot)) return new Bot()
+
+  Player.call(this)
+
+  this.name('bot')
+  this.move(100, 50)
+  this.toGo = 0
+  this.up = true
+  this.left = false
 }
 
-function fullscreen (canvas) {
-  document.body.style.margin = 0
-  document.body.style.overflow = 'hidden'
+inherit(Bot, Player)
 
-  window.addEventListener('resize', scale)
-  scale()
-
-  function scale () {
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
+Bot.prototype.update = function () {
+  if (this.toGo <= 0) {
+    this.toGo = Math.round(Math.random() * 30)
+    this.up = Math.random() > 0.5
+    this.left = Math.random() > 0.5
   }
+
+  this.y += this.up? 1 : -1
+  this.x += this.left? -1 : 1
+  this.push = Math.random() > 0.5
+  this.toGo-- 
+
+  this.bounce()
+
+  if (this.y <= 0) this.up = true
+  if (this.y >= 100) this.up = false
+  if (this.x <= 50) this.left = false
+  if (this.x >= 100) this.left = true
 }

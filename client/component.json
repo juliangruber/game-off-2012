@@ -1,7 +1,10 @@
 {
   "name": "game",
   "scripts": [
-    "index.js"
+    "index.js",
+    "lib/player.js",
+    "lib/point.js",
+    "lib/util.js"
   ],
   "dependencies": {
     "component/raf": "*",
