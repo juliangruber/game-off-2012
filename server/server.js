@@ -16,13 +16,15 @@ rooms.on('left', function (room) {
  * Http Server
  */
 
+var port = 3000 || process.argv[2]
 var ecstatic = require('ecstatic')(__dirname + '/../client')
 var server = http.createServer(ecstatic)
-server.listen(3000)
+server.listen(port)
 
 /**
  * Socket Server
  */
+
 var sock = shoe(function (client) {
   var parsed = client.pipe(JSONStream.parse([true]))
   var events = emitStream(parsed)
